@@ -6,13 +6,13 @@
   <title>Wi-Fi 설정 페이지</title>
   <style>
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:0;background:#f6f7fb;color:#111}
-    .container{max-width:480px;margin:44px auto;padding:22px;background:white;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.08);position:relative}
+    .container{max-width:480px;margin:44px auto;padding:22px;background:white;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
     h1{font-size:18px;margin:0 0 12px}
     .row{display:flex;align-items:center;gap:10px;margin-top:12px}
     .cb{width:18px;height:18px}
     label.field{min-width:110px}
     input[type="text"],input[type="password"]{flex:1;padding:10px;border:1px solid #ddd;border-radius:8px}
-    .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+    .actions{display:flex;gap:8px;margin-top:16px}
     button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer}
     button.alt{background:#10b981}
     .result{margin-top:12px;padding:10px;background:#f3f4f6;border-radius:8px;font-family:monospace;word-break:break-all;display:none}
@@ -21,23 +21,18 @@
 </head>
 <body>
   <div class="container" role="main">
-    <div class="lang-switch" aria-label="언어 선택 / Language select">
-      <button type="button" class="lang-btn active" data-lang="ko">KR</button>
-      <button type="button" class="lang-btn" data-lang="en">EN</button>
-    </div>
-
     <h1>Wi-Fi 설정</h1>
 
     <div class="row">
       <input id="cb_ssid" class="cb" type="checkbox" checked />
       <label class="field" for="ssid">Wi-Fi SSID</label>
-      <input id="ssid" type="text" placeholder="예: RANIX_WIFI_SSID" />
+      <input id="ssid" type="text" placeholder="예: SK_WiFiGIGA564B" />
     </div>
 
     <div class="row">
       <input id="cb_pw" class="cb" type="checkbox" checked />
       <label class="field" for="pw">Wi-Fi Password</label>
-      <input id="pw" type="password" placeholder="예: RANIX_WIFI_PASSWORD" />
+      <input id="pw" type="password" placeholder="예: 1801000483" />
     </div>
 
     <div class="actions">
@@ -59,71 +54,6 @@
     const buildBtn = document.getElementById('buildBtn');
     const copyBtn  = document.getElementById('copyBtn');
     const result   = document.getElementById('result');
-    const heading  = document.querySelector('h1');
-    const labelSsid = document.querySelector('label[for="ssid"]');
-    const labelPw   = document.querySelector('label[for="pw"]');
-    const hintEl    = document.querySelector('.hint');
-    const langButtons = document.querySelectorAll('.lang-btn');
-
-    let currentLang = 'ko';
-
-    const langTexts = {
-      ko: {
-        title: 'Wi-Fi 설정 페이지',
-        heading: 'Wi-Fi 설정',
-        ssidLabel: 'Wi-Fi SSID',
-        ssidPh: '예: RANIX_WIFI_SSID',
-        pwLabel: 'Wi-Fi Password',
-        pwPh: '예: RANIX_WIFI_PASSWORD',
-        send: '요청 전송',
-        build: '요청 URL 미리보기',
-        copy: '복사',
-        copied: '복사됨',
-        hint: '체크된 항목만 URL에 포함됩니다.',
-        copyFail: '복사 실패 — 권한 확인'
-      },
-      en: {
-        title: 'Wi-Fi Setup Page',
-        heading: 'Wi-Fi Setup',
-        ssidLabel: 'Wi-Fi SSID',
-        ssidPh: 'ex: RANIX_WIFI_SSID',
-        pwLabel: 'Wi-Fi Password',
-        pwPh: 'ex: RANIX_WIFI_PASSWORD',
-        send: 'Send Request',
-        build: 'Preview Request URL',
-        copy: 'Copy',
-        copied: 'Copied',
-        hint: 'Only checked fields are included in the URL.',
-        copyFail: 'Copy failed — please check permission'
-      }
-    };
-
-    function applyLang(lang){
-      const t = langTexts[lang] || langTexts.ko;
-      currentLang = lang;
-
-      document.documentElement.lang = lang;
-      document.title = t.title;
-      heading.textContent = t.heading;
-      labelSsid.textContent = t.ssidLabel;
-      labelPw.textContent   = t.pwLabel;
-      ssidInput.placeholder = t.ssidPh;
-      pwInput.placeholder   = t.pwPh;
-      sendBtn.textContent   = t.send;
-      buildBtn.textContent  = t.build;
-      // 복사 버튼은 상태에 따라 달라지므로, 기본 텍스트만 설정
-      copyBtn.textContent   = t.copy;
-      hintEl.textContent    = t.hint;
-    }
-
-    // 언어 버튼 클릭 처리
-    langButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const lang = btn.dataset.lang;
-        applyLang(lang);
-        langButtons.forEach(b => b.classList.toggle('active', b === btn));
-      });
-    });
 
     function e(v){ return encodeURIComponent(v ?? ''); }
 
@@ -145,9 +75,9 @@
     copyBtn.addEventListener('click', () => {
       const u = buildDeviceUrl();
       navigator.clipboard.writeText(u).then(()=>{
-        copyBtn.textContent = langTexts[currentLang].copied;
-        setTimeout(()=>copyBtn.textContent = langTexts[currentLang].copy,1200);
-      }).catch(()=> alert(langTexts[currentLang].copyFail));
+        copyBtn.textContent='복사됨';
+        setTimeout(()=>copyBtn.textContent='복사',1200);
+      }).catch(()=> alert('복사 실패 — 권한 확인'));
     });
 
     sendBtn.addEventListener('click', () => {
@@ -161,10 +91,6 @@
       if(p.has('ssid')) ssidInput.value = p.get('ssid');
       if(p.has('pw'))   pwInput.value   = p.get('pw');
     })();
-
-    // 초기 언어 적용 (기본: 한국어)
-    applyLang(currentLang);
   </script>
 </body>
 </html>
-
