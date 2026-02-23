@@ -1,96 +1,337 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Wi-Fi 설정 페이지</title>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:0;background:#f6f7fb;color:#111}
-    .container{max-width:480px;margin:44px auto;padding:22px;background:white;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
-    h1{font-size:18px;margin:0 0 12px}
-    .row{display:flex;align-items:center;gap:10px;margin-top:12px}
-    .cb{width:18px;height:18px}
-    label.field{min-width:110px}
-    input[type="text"],input[type="password"]{flex:1;padding:10px;border:1px solid #ddd;border-radius:8px}
-    .actions{display:flex;gap:8px;margin-top:16px}
-    button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer}
-    button.alt{background:#10b981}
-    .result{margin-top:12px;padding:10px;background:#f3f4f6;border-radius:8px;font-family:monospace;word-break:break-all;display:none}
-    .hint{font-size:12px;color:#666;margin-top:8px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Wi-Fi 설정</title>
+<style>
+  body{font-family:system-ui;margin:0;background:#f6f7fb;color:#111}
+  .container{max-width:480px;margin:44px auto;padding:22px;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
+  h1{font-size:18px;margin:0 0 12px}
+
+  .row{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .cb{width:18px;height:18px}
+  label.field{min-width:90px}
+  input[type="text"],input[type="password"],input[type="number"]{flex:1;padding:10px;border:1px solid #ddd;border-radius:8px}
+
+  /* ✅ cluster 비활성화가 눈에 띄도록 회색 처리 */
+  input[type="number"]:disabled{
+    background:#e5e7eb;
+    color:#6b7280;
+    border:1px solid #d1d5db;
+    cursor:not-allowed;
+  }
+
+  .actions{display:flex;gap:8px;margin-top:16px}
+  button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer}
+
+  /* admin compact */
+  .adminLine{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .adminLink{background:transparent;border:0;color:#6b7280;cursor:pointer;font-size:12px;padding:0}
+  .adminState{font-size:12px;color:#6b7280}
+  .adminState.on{color:#065f46;font-weight:800}
+
+  /* status / card */
+  .status{margin-top:14px;display:none}
+  .badge{font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px}
+  .ok{background:#ecfdf5;color:#065f46}
+  .err{background:#fef2f2;color:#991b1b}
+  .wait{background:#eff6ff;color:#1d4ed8}
+
+  .card{margin-top:14px;display:none;background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:16px}
+  .card h2{margin:0 0 12px;font-size:15px}
+  .kv{display:grid;grid-template-columns:110px 1fr;row-gap:8px}
+  .k{font-size:12px;color:#6b7280;font-weight:700}
+  .v{font-size:13px;color:#111;font-family:monospace;word-break:break-all}
+
+  /* modal */
+  .modal{
+    display:none;
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.35);
+    align-items:center;justify-content:center;
+    z-index:1000;
+  }
+  .modalContent{
+    width:320px;background:#fff;border-radius:14px;
+    padding:18px;box-shadow:0 12px 32px rgba(0,0,0,0.2);
+    position:relative;
+  }
+  .modalTitle{margin:0 0 12px;font-size:15px}
+  .modalClose{
+    position:absolute;right:10px;top:10px;
+    width:32px;height:32px;border-radius:10px;
+    border:1px solid #e5e7eb;background:#fff;color:#111;
+    cursor:pointer;
+    font-size:18px;
+
+    /* ✅ X 정중앙 */
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+    padding:0;
+  }
+  .modalActions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+  .modalActions button{
+    flex:1;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid #e5e7eb;
+    background:#fff;
+    color:#111;
+    font-weight:700;
+    cursor:pointer;
+  }
+</style>
 </head>
+
 <body>
-  <div class="container" role="main">
-    <h1>Wi-Fi 설정</h1>
+<div class="container">
+  <h1>Wi-Fi 설정</h1>
 
-    <div class="row">
-      <input id="cb_ssid" class="cb" type="checkbox" checked />
-      <label class="field" for="ssid">Wi-Fi SSID</label>
-      <input id="ssid" type="text" placeholder="예: SK_WiFiGIGA564B" />
-    </div>
-
-    <div class="row">
-      <input id="cb_pw" class="cb" type="checkbox" checked />
-      <label class="field" for="pw">Wi-Fi Password</label>
-      <input id="pw" type="password" placeholder="예: 1801000483" />
-    </div>
-
-    <div class="actions">
-      <button id="sendBtn">요청 전송</button>
-      <button id="buildBtn" class="alt">요청 URL 미리보기</button>
-      <button id="copyBtn" style="background:#6b7280">복사</button>
-    </div>
-
-    <div class="hint">체크된 항목만 URL에 포함됩니다.</div>
-    <div id="result" class="result"></div>
+  <!-- SSID -->
+  <div class="row">
+    <input id="cb_ssid" class="cb" type="checkbox" checked />
+    <label class="field">SSID</label>
+    <input id="ssid" type="text" placeholder="예: WIFI_SSID">
   </div>
 
-  <script>
-    const cbSsid = document.getElementById('cb_ssid');
-    const cbPw   = document.getElementById('cb_pw');
-    const ssidInput = document.getElementById('ssid');
-    const pwInput   = document.getElementById('pw');
-    const sendBtn  = document.getElementById('sendBtn');
-    const buildBtn = document.getElementById('buildBtn');
-    const copyBtn  = document.getElementById('copyBtn');
-    const result   = document.getElementById('result');
+  <!-- Password -->
+  <div class="row">
+    <input id="cb_pw" class="cb" type="checkbox" checked />
+    <label class="field">Password</label>
+    <input id="pw" type="password" placeholder="예: WIFI_PASSWORD">
+  </div>
 
-    function e(v){ return encodeURIComponent(v ?? ''); }
+  <!-- Cluster (admin only) -->
+  <div class="row">
+    <label class="field">Cluster</label>
+    <input id="cluster" type="number" min="0" max="2" step="1" inputmode="numeric"
+           disabled placeholder="관리자 활성화 필요">
+  </div>
 
-    // ✅ 체크된 항목만 포함 (해제된 항목은 완전히 생략)
-    function buildDeviceUrl() {
-      const base = 'http://192.168.4.1/command';
-      const params = [];
-      if (cbSsid.checked) params.push('ssid=' + e(ssidInput.value.trim()));
-      if (cbPw.checked)   params.push('pw='   + e(pwInput.value));
-      return params.length ? `${base}?${params.join('&')}` : base;
+  <!-- admin compact line -->
+  <div class="adminLine">
+    <button id="adminBtn" class="adminLink" type="button">고급 설정(관리자)</button>
+    <span id="adminState" class="adminState">OFF</span>
+  </div>
+
+  <div class="actions">
+    <button id="sendBtn">요청 전송</button>
+  </div>
+
+  <div id="status" class="status">
+    <span id="badge" class="badge wait">요청중</span>
+  </div>
+
+  <div id="card" class="card">
+    <h2 id="title">설정 결과</h2>
+    <div class="kv">
+      <div class="k">SSID</div>    <div id="vSsid" class="v">-</div>
+      <div class="k">Password</div><div id="vPw" class="v">-</div>
+      <div class="k">Cluster</div> <div id="vCluster" class="v">-</div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Modal -->
+<div id="adminModal" class="modal" role="dialog" aria-modal="true">
+  <div class="modalContent">
+    <button id="adminX" class="modalClose" type="button" aria-label="닫기">×</button>
+    <h3 class="modalTitle">관리자 설정</h3>
+
+    <div class="row" style="margin-top:0">
+      <label class="field">비밀번호</label>
+      <input id="admin_pw_input" type="password" placeholder="관리자 비밀번호">
+    </div>
+
+    <div class="modalActions">
+      <button id="adminOff" type="button">관리자 모드 끄기</button>
+      <button id="adminOn" type="button">관리자 모드 켜기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ====== 설정값 ======
+  const DEVICE_BASE = "http://192.168.4.1/command";
+  const ADMIN_PASSWORD = "12345679"; // 필요시 변경
+  // ====================
+
+  const sendBtn = document.getElementById('sendBtn');
+  const status = document.getElementById('status');
+  const badge = document.getElementById('badge');
+  const card = document.getElementById('card');
+
+  const cbSsid = document.getElementById('cb_ssid');
+  const cbPw = document.getElementById('cb_pw');
+
+  const clusterInput = document.getElementById('cluster');
+
+  // admin UI
+  const adminBtn = document.getElementById('adminBtn');
+  const adminStateEl = document.getElementById('adminState');
+  const modal = document.getElementById('adminModal');
+  const adminPwInput = document.getElementById('admin_pw_input');
+  const adminOnBtn = document.getElementById('adminOn');
+  const adminOffBtn = document.getElementById('adminOff');
+  const adminX = document.getElementById('adminX');
+
+  const vSsid = document.getElementById('vSsid');
+  const vPw = document.getElementById('vPw');
+  const vCluster = document.getElementById('vCluster');
+  const title = document.getElementById('title');
+
+  let adminEnabled = false;
+
+  function clampClusterIfNeeded(){
+    if(clusterInput.disabled) return;
+    const raw = String(clusterInput.value || "").trim();
+    if(raw === "") return;
+
+    const n = Number(raw);
+    if(!Number.isInteger(n) || n < 0 || n > 2){
+      clusterInput.value = "";
+      alert("Cluster 값은 0 ~ 2만 가능합니다.");
+    }
+  }
+
+  clusterInput.addEventListener('change', clampClusterIfNeeded);
+  clusterInput.addEventListener('blur', clampClusterIfNeeded);
+  clusterInput.addEventListener('input', ()=>{
+    const v = clusterInput.value;
+    if(v === "") return;
+    if(!/^\d+$/.test(v)) clusterInput.value = v.replace(/[^\d]/g,'');
+  });
+
+  function setAdminState(on){
+    adminEnabled = on;
+    if(on){
+      adminStateEl.textContent = "ON";
+      adminStateEl.className = "adminState on";
+      clusterInput.disabled = false;
+      clusterInput.placeholder = "0~2";
+    }else{
+      adminStateEl.textContent = "OFF";
+      adminStateEl.className = "adminState";
+      clusterInput.disabled = true;
+      clusterInput.value = "";
+      clusterInput.placeholder = "관리자 활성화 필요";
+    }
+  }
+  setAdminState(false);
+
+  function openModal(){
+    modal.style.display = "flex";
+    adminPwInput.value = "";
+    setTimeout(()=>adminPwInput.focus(), 0);
+  }
+  function closeModal(){
+    modal.style.display = "none";
+  }
+
+  adminBtn.addEventListener('click', openModal);
+
+  // X로 닫기
+  adminX.addEventListener('click', closeModal);
+
+  // ✅ ESC 키로 닫기 (X 누른 것과 동일)
+  document.addEventListener('keydown', function(e){
+    if(e.key === "Escape" && modal.style.display === "flex"){
+      closeModal();
+    }
+  });
+
+  // 바깥 클릭으로 닫기
+  modal.addEventListener('click', (e)=>{
+    if(e.target === modal) closeModal();
+  });
+
+  // 엔터는 "관리자 모드 켜기"
+  adminPwInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') adminOnBtn.click();
+  });
+
+  // 관리자 모드 끄기: 비밀번호 불필요
+  adminOffBtn.addEventListener('click', ()=>{
+    setAdminState(false);
+    closeModal();
+  });
+
+  // 관리자 모드 켜기: 비밀번호 필요
+  adminOnBtn.addEventListener('click', ()=>{
+    if(adminPwInput.value === ADMIN_PASSWORD){
+      setAdminState(true);
+      closeModal();
+    }else{
+      setAdminState(false);
+      alert("관리자 비밀번호가 올바르지 않습니다.");
+    }
+  });
+
+  function parseResponse(raw){
+    const s = String(raw).replace(/<br\s*\/?>/gi,"\n");
+    const lines = s.split("\n");
+    const out = {ssid:'-',pw:'-',cluster:'-',title:'설정 결과'};
+
+    lines.forEach(line=>{
+      let m;
+      if(m=line.match(/^SSID:\[(.*)\]/i)) out.ssid = m[1] || '-';
+      if(m=line.match(/^PW:\[(.*)\]/i)) out.pw = m[1] || '-';
+      if(m=line.match(/^Cluster:\[(.*)\]/i)) out.cluster = m[1] || '-';
+      if(/success/i.test(line)) out.title = "Wi-Fi 설정 완료";
+    });
+    return out;
+  }
+
+  sendBtn.addEventListener('click', async ()=>{
+    const ssidVal = encodeURIComponent(document.getElementById('ssid').value.trim());
+    const pwVal   = encodeURIComponent(document.getElementById('pw').value);
+
+    const ssidParam = "ssid=" + (cbSsid.checked ? ssidVal : "");
+    const pwParam   = "pw="   + (cbPw.checked ? pwVal : "");
+
+    clampClusterIfNeeded();
+
+    const clusterRaw = String(clusterInput.value || "").trim();
+    const includeCluster = adminEnabled && clusterRaw !== "";
+
+    let url = DEVICE_BASE + "?" + ssidParam + "&" + pwParam;
+    if(includeCluster){
+      url += "&cluster=" + encodeURIComponent(clusterRaw);
     }
 
-    buildBtn.addEventListener('click', () => {
-      const u = buildDeviceUrl();
-      result.style.display = 'block';
-      result.textContent = u;
-    });
+    status.style.display='block';
+    badge.className='badge wait';
+    badge.textContent='요청중';
+    card.style.display='none';
 
-    copyBtn.addEventListener('click', () => {
-      const u = buildDeviceUrl();
-      navigator.clipboard.writeText(u).then(()=>{
-        copyBtn.textContent='복사됨';
-        setTimeout(()=>copyBtn.textContent='복사',1200);
-      }).catch(()=> alert('복사 실패 — 권한 확인'));
-    });
+    try{
+      const res = await fetch(url, {cache:'no-store'});
+      const text = await res.text();
 
-    sendBtn.addEventListener('click', () => {
-      const url = buildDeviceUrl();
-      window.location.href = url;
-    });
+      if(!res.ok){
+        badge.className='badge err';
+        badge.textContent='실패';
+        return;
+      }
 
-    // QR로 기본값 전달 가능 (?ssid=...&pw=...)
-    (function fillFromQuery(){
-      const p = new URLSearchParams(location.search);
-      if(p.has('ssid')) ssidInput.value = p.get('ssid');
-      if(p.has('pw'))   pwInput.value   = p.get('pw');
-    })();
-  </script>
+      badge.className='badge ok';
+      badge.textContent='성공';
+
+      const data = parseResponse(text);
+      title.textContent = data.title;
+      vSsid.textContent = data.ssid;
+      vPw.textContent = data.pw;
+      vCluster.textContent = data.cluster;
+
+      card.style.display='block';
+    }catch(err){
+      badge.className='badge err';
+      badge.textContent='오류';
+    }
+  });
+</script>
 </body>
 </html>
