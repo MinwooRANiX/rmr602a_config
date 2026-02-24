@@ -236,7 +236,7 @@
   // X로 닫기
   adminX.addEventListener('click', closeModal);
 
-  // ✅ ESC 키로 닫기 (X 누른 것과 동일)
+  // ESC 키로 닫기 (X 누른 것과 동일)
   document.addEventListener('keydown', function(e){
     if(e.key === "Escape" && modal.style.display === "flex"){
       closeModal();
@@ -289,18 +289,26 @@
     const ssidVal = encodeURIComponent(document.getElementById('ssid').value.trim());
     const pwVal   = encodeURIComponent(document.getElementById('pw').value);
 
-    const ssidParam = "ssid=" + (cbSsid.checked ? ssidVal : "");
-    const pwParam   = "pw="   + (cbPw.checked ? pwVal : "");
-
     clampClusterIfNeeded();
 
-    const clusterRaw = String(clusterInput.value || "").trim();
-    const includeCluster = adminEnabled && clusterRaw !== "";
+    // ✅ 체크된 항목만 URL에 포함 (체크 해제면 파라미터 자체를 제외)
+    const params = [];
+    if(cbSsid.checked) params.push("ssid=" + ssidVal);
+    if(cbPw.checked)   params.push("pw=" + pwVal);
 
-    let url = DEVICE_BASE + "?" + ssidParam + "&" + pwParam;
-    if(includeCluster){
-      url += "&cluster=" + encodeURIComponent(clusterRaw);
+    // ✅ cluster는 관리자 ON + 값 있을 때만 포함
+    const clusterRaw = String(clusterInput.value || "").trim();
+    if(adminEnabled && clusterRaw !== ""){
+      params.push("cluster=" + encodeURIComponent(clusterRaw));
     }
+
+    // ✅ 아무 파라미터도 없으면 전송 막기
+    if(params.length === 0){
+      alert("전송할 값이 없습니다. (SSID/PW 체크 또는 관리자 Cluster 입력 필요)");
+      return;
+    }
+
+    const url = DEVICE_BASE + "?" + params.join("&");
 
     status.style.display='block';
     badge.className='badge wait';
