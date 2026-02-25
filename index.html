@@ -8,61 +8,26 @@
   body{font-family:system-ui;margin:0;background:#f6f7fb;color:#111}
   .container{max-width:480px;margin:44px auto;padding:22px;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
   h1{font-size:18px;margin:0 0 12px}
-
   .row{display:flex;align-items:center;gap:10px;margin-top:12px}
   .cb{width:18px;height:18px}
   label.field{min-width:90px}
-
-  .inputWrap{position:relative;flex:1;display:flex;align-items:center}
-  input[type="text"],input[type="password"],input[type="number"]{width:100%;padding:10px 36px 10px 10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box}
-  .clearBtn{
-    position:absolute;right:8px;top:50%;transform:translateY(-50%);
-    width:24px;height:24px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;color:#111;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900;line-height:1;
+  input[type="text"],input[type="password"],input[type="number"]{
+    flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box
   }
-
   input[type="number"]:disabled{
     background:#e5e7eb;color:#6b7280;border:1px solid #d1d5db;cursor:not-allowed;
   }
-
-  .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .actions{display:flex;gap:8px;margin-top:16px}
   button{padding:10px 14px;border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer}
-  button.secondary{background:#111827}
-  button.ghost{background:#fff;color:#111;border:1px solid #e5e7eb}
-
-  .adminLine{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .adminLine{margin-top:16px;display:flex;align-items:center;justify-content:space-between}
   .adminLink{background:transparent;border:0;color:#6b7280;cursor:pointer;font-size:12px;padding:0}
   .adminState{font-size:12px;color:#6b7280}
   .adminState.on{color:#065f46;font-weight:800}
-
   .status{margin-top:14px;display:none}
   .badge{font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px;display:inline-block}
   .ok{background:#ecfdf5;color:#065f46}
   .err{background:#fef2f2;color:#991b1b}
   .wait{background:#eff6ff;color:#1d4ed8}
-
-  .meta{margin-top:10px;font-size:12px;color:#6b7280;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-  .toggle{display:flex;align-items:center;gap:8px}
-  .toggle input{width:18px;height:18px}
-
-  .log{margin-top:12px;border:1px solid #e5e7eb;border-radius:10px;padding:10px;font-size:12px;color:#111;max-height:140px;overflow:auto;display:none}
-  .logItem{padding:6px 0;border-bottom:1px dashed #e5e7eb}
-  .logItem:last-child{border-bottom:0}
-
-  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center;z-index:1000}
-  .modalContent{width:320px;background:#fff;border-radius:14px;padding:18px;box-shadow:0 12px 32px rgba(0,0,0,0.2);position:relative}
-  .modalTitle{margin:0 0 12px;font-size:15px}
-  .modalClose{
-    position:absolute;right:10px;top:10px;width:32px;height:32px;border-radius:10px;
-    border:1px solid #e5e7eb;background:#fff;color:#111;cursor:pointer;font-size:18px;
-    display:flex;align-items:center;justify-content:center;line-height:1;padding:0;
-  }
-  .modalActions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
-  .modalActions button{
-    flex:1;padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#111;font-weight:700;cursor:pointer
-  }
-
-  iframe{display:none}
 </style>
 </head>
 
@@ -73,27 +38,18 @@
   <div class="row">
     <input id="cb_ssid" class="cb" type="checkbox" checked />
     <label class="field">SSID</label>
-    <div class="inputWrap">
-      <input id="ssid" type="text" placeholder="예: WIFI_SSID" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <button id="clr_ssid" class="clearBtn" type="button" aria-label="SSID 지우기">×</button>
-    </div>
+    <input id="ssid" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
   </div>
 
   <div class="row">
     <input id="cb_pw" class="cb" type="checkbox" checked />
     <label class="field">Password</label>
-    <div class="inputWrap">
-      <input id="pw" type="password" placeholder="예: WIFI_PASSWORD" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <button id="clr_pw" class="clearBtn" type="button" aria-label="Password 지우기">×</button>
-    </div>
+    <input id="pw" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
   </div>
 
   <div class="row">
     <label class="field">Cluster</label>
-    <div class="inputWrap">
-      <input id="cluster" type="number" min="0" max="2" step="1" inputmode="numeric" disabled placeholder="관리자 활성화 필요">
-      <button id="clr_cluster" class="clearBtn" type="button" aria-label="Cluster 지우기">×</button>
-    </div>
+    <input id="cluster" type="number" min="0" max="2" step="1" inputmode="numeric" disabled>
   </div>
 
   <div class="adminLine">
@@ -101,386 +57,114 @@
     <span id="adminState" class="adminState">OFF</span>
   </div>
 
-  <div class="meta">
-    <div class="toggle">
-      <input id="tx_newtab" type="checkbox" checked />
-      <label for="tx_newtab">안정 전송(새 창)</label>
-    </div>
-    <div id="lastInfo">최근 전송: 없음</div>
-  </div>
-
   <div class="actions">
     <button id="sendBtn" type="button">요청 전송</button>
-    <button id="nextBtn" type="button" class="secondary">다음 제품</button>
-    <button id="resetBtn" type="button" class="ghost">전체 초기화</button>
   </div>
 
   <div id="status" class="status">
     <span id="badge" class="badge wait">대기중</span>
   </div>
-
-  <div id="log" class="log"></div>
-
-  <iframe id="navFrame" title="nav"></iframe>
-</div>
-
-<div id="adminModal" class="modal" role="dialog" aria-modal="true">
-  <div class="modalContent">
-    <button id="adminX" class="modalClose" type="button" aria-label="닫기">×</button>
-    <h3 class="modalTitle">관리자 설정</h3>
-
-    <div class="row" style="margin-top:0">
-      <label class="field">Admin PW</label>
-      <div class="inputWrap" style="flex:1">
-        <input id="admin_pw_input" type="password" placeholder="관리자 비밀번호" autocomplete="off" style="padding-right:10px">
-      </div>
-    </div>
-
-    <div class="modalActions">
-      <button id="adminOff" type="button">관리자 모드 끄기</button>
-      <button id="adminOn" type="button">관리자 모드 켜기</button>
-    </div>
-  </div>
 </div>
 
 <script>
-  const DEVICE_COMMAND = "http://192.168.4.1/command";
-  const ADMIN_PASSWORD = "12345679";
+const DEVICE_COMMAND="http://192.168.4.1/command";
+const ADMIN_PASSWORD="12345679";
+const LS_KEY="rmr602a_cfg_final";
 
-  const LS_KEY = "rmr602a_cfg_v3";
-  const LS_LOG = "rmr602a_cfg_log_v1";
+const ssid=document.getElementById("ssid");
+const pw=document.getElementById("pw");
+const cluster=document.getElementById("cluster");
+const cbSsid=document.getElementById("cb_ssid");
+const cbPw=document.getElementById("cb_pw");
+const sendBtn=document.getElementById("sendBtn");
+const badge=document.getElementById("badge");
+const status=document.getElementById("status");
+const adminBtn=document.getElementById("adminBtn");
+const adminState=document.getElementById("adminState");
 
-  const cbSsid = document.getElementById('cb_ssid');
-  const cbPw = document.getElementById('cb_pw');
-  const ssidInput = document.getElementById('ssid');
-  const pwInput = document.getElementById('pw');
-  const clusterInput = document.getElementById('cluster');
+let adminEnabled=false;
 
-  const clrSsid = document.getElementById('clr_ssid');
-  const clrPw = document.getElementById('clr_pw');
-  const clrCluster = document.getElementById('clr_cluster');
+function saveState(){
+localStorage.setItem(LS_KEY,JSON.stringify({
+ssid:ssid.value,
+pw:pw.value,
+cluster:cluster.value,
+cbSsid:cbSsid.checked,
+cbPw:cbPw.checked,
+adminEnabled:adminEnabled
+}));
+}
 
-  const sendBtn = document.getElementById('sendBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const resetBtn = document.getElementById('resetBtn');
+function loadState(){
+const raw=localStorage.getItem(LS_KEY);
+if(!raw)return;
+const s=JSON.parse(raw);
+ssid.value=s.ssid||"";
+pw.value=s.pw||"";
+cluster.value=s.cluster||"";
+cbSsid.checked=s.cbSsid??true;
+cbPw.checked=s.cbPw??true;
+adminEnabled=s.adminEnabled??false;
+updateAdmin();
+}
 
-  const status = document.getElementById('status');
-  const badge = document.getElementById('badge');
+function updateAdmin(){
+if(adminEnabled){
+adminState.textContent="ON";
+adminState.className="adminState on";
+cluster.disabled=false;
+}else{
+adminState.textContent="OFF";
+adminState.className="adminState";
+cluster.disabled=true;
+cluster.value="";
+}
+saveState();
+}
 
-  const txNewtab = document.getElementById('tx_newtab');
-  const lastInfo = document.getElementById('lastInfo');
+adminBtn.onclick=function(){
+const p=prompt("관리자 비밀번호");
+if(p===ADMIN_PASSWORD){
+adminEnabled=true;
+updateAdmin();
+}else{
+alert("비밀번호 오류");
+}
+};
 
-  const navFrame = document.getElementById('navFrame');
+function buildUrl(){
+const params=[];
+if(cbSsid.checked&&ssid.value.trim()!=="")
+params.push("ssid="+encodeURIComponent(ssid.value.trim()));
+if(cbPw.checked)
+params.push("pw="+encodeURIComponent(pw.value));
+if(adminEnabled&&cluster.value!=="")
+params.push("cluster="+encodeURIComponent(cluster.value));
+if(params.length===0)return null;
+return DEVICE_COMMAND+"?"+params.join("&");
+}
 
-  const adminBtn = document.getElementById('adminBtn');
-  const adminStateEl = document.getElementById('adminState');
-  const modal = document.getElementById('adminModal');
-  const adminPwInput = document.getElementById('admin_pw_input');
-  const adminOnBtn = document.getElementById('adminOn');
-  const adminOffBtn = document.getElementById('adminOff');
-  const adminX = document.getElementById('adminX');
+function setBadge(type,text){
+status.style.display="block";
+badge.className="badge "+type;
+badge.textContent=text;
+}
 
-  const logEl = document.getElementById('log');
+sendBtn.onclick=function(){
+saveState();
+const url=buildUrl();
+if(!url){setBadge("err","전송값 없음");return;}
+setBadge("wait","전송중...");
+window.open(url,"_blank");
+setTimeout(()=>{setBadge("ok","전송 요청 완료");},300);
+};
 
-  let adminEnabled = false;
+document.querySelectorAll("input").forEach(el=>{
+["input","change","blur","keyup"].forEach(e=>el.addEventListener(e,saveState));
+});
 
-  function nowText(){
-    const d = new Date();
-    const p = (n)=>String(n).padStart(2,'0');
-    return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-  }
-
-  function setBadge(type, text){
-    status.style.display = 'block';
-    badge.className = 'badge ' + type;
-    badge.textContent = text;
-  }
-
-  function clampClusterIfNeeded(){
-    if(clusterInput.disabled) return;
-    const raw = String(clusterInput.value || "").trim();
-    if(raw === "") return;
-    const n = Number(raw);
-    if(!Number.isInteger(n) || n < 0 || n > 2){
-      clusterInput.value = "";
-      alert("Cluster 값은 0 ~ 2만 가능합니다.");
-    }
-  }
-
-  function setAdminState(on){
-    adminEnabled = on;
-    if(on){
-      adminStateEl.textContent = "ON";
-      adminStateEl.className = "adminState on";
-      clusterInput.disabled = false;
-      clusterInput.placeholder = "0~2";
-    }else{
-      adminStateEl.textContent = "OFF";
-      adminStateEl.className = "adminState";
-      clusterInput.disabled = true;
-      clusterInput.value = "";
-      clusterInput.placeholder = "관리자 활성화 필요";
-    }
-    saveState();
-  }
-
-  function openModal(){
-    modal.style.display = "flex";
-    adminPwInput.value = "";
-    setTimeout(()=>adminPwInput.focus(), 0);
-  }
-  function closeModal(){
-    modal.style.display = "none";
-  }
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  function renderLog(arr){
-    if(!arr || arr.length === 0){
-      logEl.style.display = "none";
-      logEl.innerHTML = "";
-      return;
-    }
-    logEl.style.display = "block";
-    logEl.innerHTML = arr.map(x=>{
-      const ss = (x.ssid ?? "");
-      const cl = (x.cluster ?? "");
-      const ok = (x.method ?? "");
-      return `<div class="logItem">${escapeHtml(x.t)} · ${escapeHtml(ok)} · SSID:${escapeHtml(ss)} · CL:${escapeHtml(cl)}</div>`;
-    }).join("");
-  }
-
-  function loadLog(){
-    try{
-      const lraw = localStorage.getItem(LS_LOG);
-      const arr = lraw ? JSON.parse(lraw) : [];
-      return Array.isArray(arr) ? arr : [];
-    }catch(e){
-      return [];
-    }
-  }
-
-  function saveLog(arr){
-    try{ localStorage.setItem(LS_LOG, JSON.stringify(arr)); }catch(e){}
-  }
-
-  function logSend(method){
-    const arr = loadLog();
-    arr.unshift({
-      t: nowText(),
-      method,
-      ssid: ssidInput.value.trim(),
-      cluster: adminEnabled ? String(clusterInput.value || "").trim() : ""
-    });
-    const cut = arr.slice(0, 20);
-    saveLog(cut);
-    renderLog(cut);
-  }
-
-  function loadState(){
-    try{
-      const raw = localStorage.getItem(LS_KEY);
-      if(raw){
-        const s = JSON.parse(raw);
-        if(typeof s.cbSsid === "boolean") cbSsid.checked = s.cbSsid;
-        if(typeof s.cbPw === "boolean") cbPw.checked = s.cbPw;
-        if(typeof s.ssid === "string") ssidInput.value = s.ssid;
-        if(typeof s.pw === "string") pwInput.value = s.pw;
-        if(typeof s.txNewtab === "boolean") txNewtab.checked = s.txNewtab;
-        if(typeof s.adminEnabled === "boolean") setAdminState(s.adminEnabled);
-        if(typeof s.cluster === "string") clusterInput.value = s.cluster;
-        if(typeof s.lastInfo === "string") lastInfo.textContent = s.lastInfo;
-      }else{
-        setAdminState(false);
-      }
-    }catch(e){
-      setAdminState(false);
-    }
-
-    try{
-      renderLog(loadLog());
-    }catch(e){
-      renderLog([]);
-    }
-  }
-
-  function saveState(){
-    try{
-      const s = {
-        cbSsid: cbSsid.checked,
-        cbPw: cbPw.checked,
-        ssid: ssidInput.value,
-        pw: pwInput.value,
-        cluster: clusterInput.value,
-        adminEnabled: adminEnabled,
-        txNewtab: txNewtab.checked,
-        lastInfo: lastInfo.textContent
-      };
-      localStorage.setItem(LS_KEY, JSON.stringify(s));
-    }catch(e){}
-  }
-
-  function clearState(){
-    try{ localStorage.removeItem(LS_KEY); }catch(e){}
-  }
-
-  function buildCommandUrl(){
-    clampClusterIfNeeded();
-
-    const params = [];
-    const ssidRaw = ssidInput.value.trim();
-    const pwRaw = pwInput.value;
-
-    if(cbSsid.checked && ssidRaw !== "") params.push("ssid=" + encodeURIComponent(ssidRaw));
-    if(cbPw.checked) params.push("pw=" + encodeURIComponent(pwRaw));
-
-    const clusterRaw = String(clusterInput.value || "").trim();
-    if(adminEnabled && clusterRaw !== "") params.push("cluster=" + encodeURIComponent(clusterRaw));
-
-    if(params.length === 0) return null;
-    return DEVICE_COMMAND + "?" + params.join("&");
-  }
-
-  function quickClear(input){
-    input.value = "";
-    input.focus();
-    saveState();
-  }
-
-  function sendByNewTab(url){
-    try{
-      const w = window.open(url, "_blank");
-      if(!w) return false;
-      return true;
-    }catch(e){
-      return false;
-    }
-  }
-
-  function sendByIframe(url){
-    try{
-      navFrame.src = url;
-      return true;
-    }catch(e){
-      return false;
-    }
-  }
-
-  function attachAutosave(){
-    const els = [ssidInput, pwInput, clusterInput, cbSsid, cbPw, txNewtab];
-    const events = ['keyup','input','change','blur'];
-    events.forEach(evt=>{
-      els.forEach(el=>{
-        if(!el) return;
-        el.addEventListener(evt, saveState);
-      });
-    });
-  }
-
-  function bootRestore(){
-    loadState();
-    saveState();
-  }
-
-  clrSsid.addEventListener('click', ()=>quickClear(ssidInput));
-  clrPw.addEventListener('click', ()=>quickClear(pwInput));
-  clrCluster.addEventListener('click', ()=>{
-    if(clusterInput.disabled) return;
-    quickClear(clusterInput);
-  });
-
-  adminBtn.addEventListener('click', openModal);
-  adminX.addEventListener('click', closeModal);
-
-  document.addEventListener('keydown', function(e){
-    if(e.key === "Escape" && modal.style.display === "flex") closeModal();
-  });
-
-  modal.addEventListener('click', (e)=>{
-    if(e.target === modal) closeModal();
-  });
-
-  adminPwInput.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter') adminOnBtn.click();
-  });
-
-  adminOffBtn.addEventListener('click', ()=>{
-    setAdminState(false);
-    closeModal();
-  });
-
-  adminOnBtn.addEventListener('click', ()=>{
-    if(adminPwInput.value === ADMIN_PASSWORD){
-      setAdminState(true);
-      closeModal();
-    }else{
-      setAdminState(false);
-      alert("관리자 비밀번호가 올바르지 않습니다.");
-    }
-  });
-
-  clusterInput.addEventListener('change', ()=>{ clampClusterIfNeeded(); saveState(); });
-  clusterInput.addEventListener('blur',  ()=>{ clampClusterIfNeeded(); saveState(); });
-  clusterInput.addEventListener('input', ()=>{
-    const v = clusterInput.value;
-    if(v === "") { saveState(); return; }
-    if(!/^\d+$/.test(v)) clusterInput.value = v.replace(/[^\d]/g,'');
-    saveState();
-  });
-
-  sendBtn.addEventListener('click', ()=>{
-    saveState();
-    const url = buildCommandUrl();
-    if(!url){
-      setBadge('err', '전송할 값이 없습니다');
-      return;
-    }
-
-    setBadge('wait', '전송중...');
-
-    const method = txNewtab.checked ? "NEW_TAB" : "IFRAME";
-    const ok = txNewtab.checked ? sendByNewTab(url) : sendByIframe(url);
-
-    if(ok){
-      setTimeout(()=>setBadge('ok', '전송 요청을 보냈습니다'), 200);
-      lastInfo.textContent = `최근 전송: ${nowText()} (${method})`;
-      logSend(method);
-      saveState();
-    }else{
-      setBadge('err', '전송 실패(팝업/차단 설정 확인)');
-    }
-  });
-
-  nextBtn.addEventListener('click', ()=>{
-    setBadge('ok', '다음 제품으로 진행 (입력값 유지)');
-    lastInfo.textContent = `최근 동작: ${nowText()} (NEXT)`;
-    saveState();
-  });
-
-  resetBtn.addEventListener('click', ()=>{
-    cbSsid.checked = true;
-    cbPw.checked = true;
-    ssidInput.value = "";
-    pwInput.value = "";
-    setAdminState(false);
-    clusterInput.value = "";
-    lastInfo.textContent = "최근 전송: 없음";
-    clearState();
-    saveState();
-    setBadge('ok', '전체 초기화 완료');
-  });
-
-  attachAutosave();
-  document.addEventListener('DOMContentLoaded', bootRestore);
-  window.addEventListener('pageshow', bootRestore);
-  bootRestore();
+document.addEventListener("DOMContentLoaded",loadState);
+window.addEventListener("pageshow",loadState);
 </script>
 </body>
 </html>
