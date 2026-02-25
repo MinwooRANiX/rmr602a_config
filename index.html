@@ -14,7 +14,9 @@
   input[type="text"],input[type="password"],input[type="number"]{
     flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box
   }
-  input[type="number"]:disabled{
+  input[type="number"]:disabled,
+  input[type="text"]:disabled,
+  input[type="password"]:disabled{
     background:#e5e7eb;color:#6b7280;border:1px solid #d1d5db;cursor:not-allowed;
   }
   .actions{display:flex;gap:8px;margin-top:16px}
@@ -48,6 +50,7 @@
   </div>
 
   <div class="row">
+    <input id="cb_cluster" class="cb" type="checkbox" />
     <label class="field">Cluster</label>
     <input id="cluster" type="number" min="0" max="2" step="1" inputmode="numeric" disabled>
   </div>
@@ -69,118 +72,192 @@
 <script>
 const DEVICE_COMMAND="http://192.168.4.1/command";
 const ADMIN_PASSWORD="12345679";
-const LS_KEY="rmr602a_cfg_final2";
+const LS_KEY="rmr602a_cfg_table_v1";
+
+const cbSsid=document.getElementById("cb_ssid");
+const cbPw=document.getElementById("cb_pw");
+const cbCluster=document.getElementById("cb_cluster");
 
 const ssid=document.getElementById("ssid");
 const pw=document.getElementById("pw");
 const cluster=document.getElementById("cluster");
-const cbSsid=document.getElementById("cb_ssid");
-const cbPw=document.getElementById("cb_pw");
+
 const sendBtn=document.getElementById("sendBtn");
-const badge=document.getElementById("badge");
 const status=document.getElementById("status");
+const badge=document.getElementById("badge");
+
 const adminBtn=document.getElementById("adminBtn");
 const adminState=document.getElementById("adminState");
 
 let adminEnabled=false;
 
-function saveState(){
-try{
-localStorage.setItem(LS_KEY,JSON.stringify({
-ssid:ssid.value,
-pw:pw.value,
-cluster:cluster.value,
-cbSsid:cbSsid.checked,
-cbPw:cbPw.checked,
-adminEnabled:adminEnabled
-}));
-}catch(e){}
+function setBadge(type,text){
+  status.style.display="block";
+  badge.className="badge "+type;
+  badge.textContent=text;
 }
 
-function loadState(){
-try{
-const raw=localStorage.getItem(LS_KEY);
-if(!raw){ updateAdmin(); return; }
-const s=JSON.parse(raw);
-ssid.value=s.ssid||"";
-pw.value=s.pw||"";
-cluster.value=s.cluster||"";
-cbSsid.checked=s.cbSsid??true;
-cbPw.checked=s.cbPw??true;
-adminEnabled=s.adminEnabled??false;
-updateAdmin(false);
-}catch(e){
-updateAdmin();
+function saveState(){
+  try{
+    localStorage.setItem(LS_KEY,JSON.stringify({
+      cbSsid:cbSsid.checked,
+      cbPw:cbPw.checked,
+      cbCluster:cbCluster.checked,
+      ssid:ssid.value,
+      pw:pw.value,
+      cluster:cluster.value,
+      adminEnabled:adminEnabled
+    }));
+  }catch(e){}
 }
+
+function applyClusterEnable(){
+  const enable = adminEnabled && cbCluster.checked;
+  cluster.disabled = !enable;
+  cbCluster.disabled = !adminEnabled;
+  if(!adminEnabled){
+    cbCluster.checked = false;
+    cluster.value = "";
+    cluster.disabled = true;
+  }else{
+    if(!cbCluster.checked){
+      cluster.value = "";
+      cluster.disabled = true;
+    }
+  }
 }
 
 function updateAdmin(write=true){
-if(adminEnabled){
-adminState.textContent="ON";
-adminState.className="adminState on";
-cluster.disabled=false;
-}else{
-adminState.textContent="OFF";
-adminState.className="adminState";
-cluster.disabled=true;
-cluster.value="";
-}
-if(write) saveState();
+  if(adminEnabled){
+    adminState.textContent="ON";
+    adminState.className="adminState on";
+  }else{
+    adminState.textContent="OFF";
+    adminState.className="adminState";
+  }
+  applyClusterEnable();
+  if(write) saveState();
 }
 
-function setBadge(type,text){
-status.style.display="block";
-badge.className="badge "+type;
-badge.textContent=text;
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(raw){
+      const s=JSON.parse(raw);
+      cbSsid.checked = (s.cbSsid ?? true);
+      cbPw.checked = (s.cbPw ?? true);
+      cbCluster.checked = (s.cbCluster ?? false);
+      ssid.value = (s.ssid ?? "");
+      pw.value = (s.pw ?? "");
+      cluster.value = (s.cluster ?? "");
+      adminEnabled = (s.adminEnabled ?? false);
+    }
+  }catch(e){}
+  updateAdmin(false);
+}
+
+function validateCluster(){
+  const raw = String(cluster.value || "").trim();
+  if(raw === ""){
+    setBadge("err","Cluster를 체크했으면 0~2 값을 입력해야 합니다");
+    return false;
+  }
+  if(!/^\d+$/.test(raw)){
+    setBadge("err","Cluster는 0~2 숫자만 가능합니다");
+    return false;
+  }
+  const n = Number(raw);
+  if(!(n === 0 || n === 1 || n === 2)){
+    setBadge("err","Cluster는 0~2만 가능합니다");
+    return false;
+  }
+  cluster.value = String(n);
+  return true;
 }
 
 function buildUrl(){
-const params=[];
-if(cbSsid.checked && ssid.value.trim()!=="") params.push("ssid="+encodeURIComponent(ssid.value.trim()));
-if(cbPw.checked) params.push("pw="+encodeURIComponent(pw.value));
-if(adminEnabled && cluster.value!=="") params.push("cluster="+encodeURIComponent(cluster.value));
-if(params.length===0) return null;
-return DEVICE_COMMAND+"?"+params.join("&");
+  const params = [];
+
+  if(cbSsid.checked){
+    params.push("ssid=" + encodeURIComponent(ssid.value.trim()));
+  }
+  if(cbPw.checked){
+    params.push("pw=" + encodeURIComponent(pw.value));
+  }
+  if(cbCluster.checked){
+    if(!adminEnabled){
+      setBadge("err","Cluster는 관리자 모드에서만 전송할 수 있습니다");
+      return null;
+    }
+    if(!validateCluster()) return null;
+    params.push("cluster=" + encodeURIComponent(cluster.value.trim()));
+  }
+
+  if(params.length === 0) return null;
+  return DEVICE_COMMAND + "?" + params.join("&");
 }
 
 adminBtn.onclick=function(){
-const choice=prompt("관리자: 1=켜기, 0=끄기");
-if(choice===null) return;
-if(String(choice).trim()==="0"){
-adminEnabled=false;
-updateAdmin();
-setBadge("ok","관리자 모드 OFF");
-return;
-}
-if(String(choice).trim()==="1"){
-const p=prompt("관리자 비밀번호");
-if(p===ADMIN_PASSWORD){
-adminEnabled=true;
-updateAdmin();
-setBadge("ok","관리자 모드 ON");
-}else{
-setBadge("err","비밀번호 오류");
-}
-return;
-}
-alert("1 또는 0만 입력하세요.");
+  const choice=prompt("관리자: 1=켜기, 0=끄기");
+  if(choice===null) return;
+
+  const v = String(choice).trim();
+  if(v==="0"){
+    adminEnabled=false;
+    updateAdmin();
+    setBadge("ok","관리자 모드 OFF");
+    return;
+  }
+  if(v==="1"){
+    const p=prompt("관리자 비밀번호");
+    if(p===ADMIN_PASSWORD){
+      adminEnabled=true;
+      updateAdmin();
+      setBadge("ok","관리자 모드 ON");
+    }else{
+      setBadge("err","비밀번호 오류");
+    }
+    return;
+  }
+  alert("1 또는 0만 입력하세요.");
 };
 
-sendBtn.onclick=function(){
-saveState();
-const url=buildUrl();
-if(!url){ setBadge("err","전송값 없음"); return; }
-setBadge("wait","전송중...");
-window.open(url,"_blank");
-setTimeout(()=>{ setBadge("ok","전송 요청 완료"); },300);
-};
-
-document.querySelectorAll("input").forEach(el=>{
-["input","change","blur","keyup"].forEach(e=>el.addEventListener(e,saveState));
+cbCluster.addEventListener("change", ()=>{
+  applyClusterEnable();
+  saveState();
 });
 
-document.addEventListener("DOMContentLoaded",loadState);
-window.addEventListener("pageshow",loadState);
+cluster.addEventListener("input", ()=>{
+  const v = cluster.value;
+  if(v === "") { saveState(); return; }
+  if(!/^\d+$/.test(v)) cluster.value = v.replace(/[^\d]/g,'');
+  saveState();
+});
+cluster.addEventListener("blur", ()=>{
+  if(cbCluster.checked && adminEnabled){
+    validateCluster();
+  }
+  saveState();
+});
+
+sendBtn.onclick=function(){
+  saveState();
+  const url = buildUrl();
+  if(!url){
+    if(badge.textContent==="대기중") setBadge("err","전송하지 않음");
+    return;
+  }
+  setBadge("wait","전송중...");
+  window.open(url,"_blank");
+  setTimeout(()=>setBadge("ok","전송 요청 완료"),300);
+};
+
+[cbSsid, cbPw, ssid, pw].forEach(el=>{
+  ["input","change","blur","keyup"].forEach(e=>el.addEventListener(e,saveState));
+});
+
+document.addEventListener("DOMContentLoaded", loadState);
+window.addEventListener("pageshow", loadState);
 </script>
 </body>
 </html>
