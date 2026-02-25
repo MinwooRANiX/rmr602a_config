@@ -69,7 +69,7 @@
 <script>
 const DEVICE_COMMAND="http://192.168.4.1/command";
 const ADMIN_PASSWORD="12345679";
-const LS_KEY="rmr602a_cfg_final";
+const LS_KEY="rmr602a_cfg_final2";
 
 const ssid=document.getElementById("ssid");
 const pw=document.getElementById("pw");
@@ -85,6 +85,7 @@ const adminState=document.getElementById("adminState");
 let adminEnabled=false;
 
 function saveState(){
+try{
 localStorage.setItem(LS_KEY,JSON.stringify({
 ssid:ssid.value,
 pw:pw.value,
@@ -93,11 +94,13 @@ cbSsid:cbSsid.checked,
 cbPw:cbPw.checked,
 adminEnabled:adminEnabled
 }));
+}catch(e){}
 }
 
 function loadState(){
+try{
 const raw=localStorage.getItem(LS_KEY);
-if(!raw)return;
+if(!raw){ updateAdmin(); return; }
 const s=JSON.parse(raw);
 ssid.value=s.ssid||"";
 pw.value=s.pw||"";
@@ -105,10 +108,13 @@ cluster.value=s.cluster||"";
 cbSsid.checked=s.cbSsid??true;
 cbPw.checked=s.cbPw??true;
 adminEnabled=s.adminEnabled??false;
+updateAdmin(false);
+}catch(e){
 updateAdmin();
 }
+}
 
-function updateAdmin(){
+function updateAdmin(write=true){
 if(adminEnabled){
 adminState.textContent="ON";
 adminState.className="adminState on";
@@ -119,29 +125,7 @@ adminState.className="adminState";
 cluster.disabled=true;
 cluster.value="";
 }
-saveState();
-}
-
-adminBtn.onclick=function(){
-const p=prompt("관리자 비밀번호");
-if(p===ADMIN_PASSWORD){
-adminEnabled=true;
-updateAdmin();
-}else{
-alert("비밀번호 오류");
-}
-};
-
-function buildUrl(){
-const params=[];
-if(cbSsid.checked&&ssid.value.trim()!=="")
-params.push("ssid="+encodeURIComponent(ssid.value.trim()));
-if(cbPw.checked)
-params.push("pw="+encodeURIComponent(pw.value));
-if(adminEnabled&&cluster.value!=="")
-params.push("cluster="+encodeURIComponent(cluster.value));
-if(params.length===0)return null;
-return DEVICE_COMMAND+"?"+params.join("&");
+if(write) saveState();
 }
 
 function setBadge(type,text){
@@ -150,13 +134,45 @@ badge.className="badge "+type;
 badge.textContent=text;
 }
 
+function buildUrl(){
+const params=[];
+if(cbSsid.checked && ssid.value.trim()!=="") params.push("ssid="+encodeURIComponent(ssid.value.trim()));
+if(cbPw.checked) params.push("pw="+encodeURIComponent(pw.value));
+if(adminEnabled && cluster.value!=="") params.push("cluster="+encodeURIComponent(cluster.value));
+if(params.length===0) return null;
+return DEVICE_COMMAND+"?"+params.join("&");
+}
+
+adminBtn.onclick=function(){
+const choice=prompt("관리자: 1=켜기, 0=끄기");
+if(choice===null) return;
+if(String(choice).trim()==="0"){
+adminEnabled=false;
+updateAdmin();
+setBadge("ok","관리자 모드 OFF");
+return;
+}
+if(String(choice).trim()==="1"){
+const p=prompt("관리자 비밀번호");
+if(p===ADMIN_PASSWORD){
+adminEnabled=true;
+updateAdmin();
+setBadge("ok","관리자 모드 ON");
+}else{
+setBadge("err","비밀번호 오류");
+}
+return;
+}
+alert("1 또는 0만 입력하세요.");
+};
+
 sendBtn.onclick=function(){
 saveState();
 const url=buildUrl();
-if(!url){setBadge("err","전송값 없음");return;}
+if(!url){ setBadge("err","전송값 없음"); return; }
 setBadge("wait","전송중...");
 window.open(url,"_blank");
-setTimeout(()=>{setBadge("ok","전송 요청 완료");},300);
+setTimeout(()=>{ setBadge("ok","전송 요청 완료"); },300);
 };
 
 document.querySelectorAll("input").forEach(el=>{
