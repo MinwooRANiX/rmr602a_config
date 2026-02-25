@@ -30,6 +30,23 @@
   .ok{background:#ecfdf5;color:#065f46}
   .err{background:#fef2f2;color:#991b1b}
   .wait{background:#eff6ff;color:#1d4ed8}
+
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);align-items:center;justify-content:center;z-index:1000}
+  .modalContent{width:340px;background:#fff;border-radius:14px;padding:18px;box-shadow:0 12px 32px rgba(0,0,0,0.2);position:relative}
+  .modalTitle{margin:0 0 12px;font-size:15px}
+  .modalClose{
+    position:absolute;right:10px;top:10px;width:32px;height:32px;border-radius:10px;
+    border:1px solid #e5e7eb;background:#fff;color:#111;cursor:pointer;font-size:18px;
+    display:flex;align-items:center;justify-content:center;line-height:1;padding:0;
+  }
+  .pwWrap{display:flex;gap:8px;align-items:center;flex:1}
+  .pwWrap input{flex:1}
+  .toggleBtn{padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#111;font-weight:700;cursor:pointer}
+  .modalActions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+  .modalActions button{
+    flex:1;padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;color:#111;font-weight:700;cursor:pointer
+  }
+  .danger{border-color:#fecaca;background:#fff;color:#991b1b}
 </style>
 </head>
 
@@ -69,10 +86,42 @@
   </div>
 </div>
 
+<div id="adminModal" class="modal" role="dialog" aria-modal="true">
+  <div class="modalContent">
+    <button id="adminX" class="modalClose" type="button" aria-label="닫기">×</button>
+    <h3 class="modalTitle">관리자 설정</h3>
+
+    <div class="row" style="margin-top:0">
+      <label class="field">Mode</label>
+      <div style="flex:1;display:flex;gap:10px;align-items:center">
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;color:#111">
+          <input id="adminModeOn" type="radio" name="adminMode" value="on"> 켜기
+        </label>
+        <label style="display:flex;gap:6px;align-items:center;font-size:13px;color:#111">
+          <input id="adminModeOff" type="radio" name="adminMode" value="off"> 끄기
+        </label>
+      </div>
+    </div>
+
+    <div class="row">
+      <label class="field">Admin PW</label>
+      <div class="pwWrap">
+        <input id="adminPw" type="password" placeholder="관리자 비밀번호" autocomplete="off">
+        <button id="pwToggle" type="button" class="toggleBtn">보기</button>
+      </div>
+    </div>
+
+    <div class="modalActions">
+      <button id="adminCancel" type="button">닫기</button>
+      <button id="adminApply" type="button">적용</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const DEVICE_COMMAND="http://192.168.4.1/command";
 const ADMIN_PASSWORD="12345679";
-const LS_KEY="rmr602a_cfg_table_v1";
+const LS_KEY="rmr602a_cfg_table_v2";
 
 const cbSsid=document.getElementById("cb_ssid");
 const cbPw=document.getElementById("cb_pw");
@@ -88,6 +137,15 @@ const badge=document.getElementById("badge");
 
 const adminBtn=document.getElementById("adminBtn");
 const adminState=document.getElementById("adminState");
+
+const modal=document.getElementById("adminModal");
+const adminX=document.getElementById("adminX");
+const adminCancel=document.getElementById("adminCancel");
+const adminApply=document.getElementById("adminApply");
+const adminPw=document.getElementById("adminPw");
+const pwToggle=document.getElementById("pwToggle");
+const adminModeOn=document.getElementById("adminModeOn");
+const adminModeOff=document.getElementById("adminModeOff");
 
 let adminEnabled=false;
 
@@ -156,6 +214,71 @@ function loadState(){
   updateAdmin(false);
 }
 
+function openModal(){
+  modal.style.display="flex";
+  adminPw.value="";
+  adminPw.type="password";
+  pwToggle.textContent="보기";
+  if(adminEnabled){
+    adminModeOn.checked=true;
+  }else{
+    adminModeOff.checked=true;
+  }
+  setTimeout(()=>adminPw.focus(),0);
+}
+
+function closeModal(){
+  modal.style.display="none";
+}
+
+pwToggle.addEventListener("click", ()=>{
+  if(adminPw.type==="password"){
+    adminPw.type="text";
+    pwToggle.textContent="숨기기";
+  }else{
+    adminPw.type="password";
+    pwToggle.textContent="보기";
+  }
+});
+
+adminBtn.addEventListener("click", openModal);
+adminX.addEventListener("click", closeModal);
+adminCancel.addEventListener("click", closeModal);
+modal.addEventListener("click", (e)=>{ if(e.target===modal) closeModal(); });
+document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && modal.style.display==="flex") closeModal(); });
+
+adminApply.addEventListener("click", ()=>{
+  const wantOn = adminModeOn.checked;
+  const wantOff = adminModeOff.checked;
+
+  if(wantOff){
+    adminEnabled=false;
+    updateAdmin();
+    setBadge("ok","관리자 모드 OFF");
+    closeModal();
+    return;
+  }
+
+  if(wantOn){
+    if(adminPw.value === ADMIN_PASSWORD){
+      adminEnabled=true;
+      updateAdmin();
+      setBadge("ok","관리자 모드 ON");
+      closeModal();
+    }else{
+      setBadge("err","비밀번호 오류");
+    }
+    return;
+  }
+
+  setBadge("err","모드를 선택해주세요");
+});
+
+cbCluster.addEventListener("change", ()=>{
+  applyClusterEnable();
+  saveState();
+});
+
 function validateCluster(){
   const raw = String(cluster.value || "").trim();
   if(raw === ""){
@@ -167,13 +290,26 @@ function validateCluster(){
     return false;
   }
   const n = Number(raw);
-  if(!(n === 0 || n === 1 || n === 2)){
+  if(!(n===0 || n===1 || n===2)){
     setBadge("err","Cluster는 0~2만 가능합니다");
     return false;
   }
   cluster.value = String(n);
   return true;
 }
+
+cluster.addEventListener("input", ()=>{
+  const v = cluster.value;
+  if(v === "") { saveState(); return; }
+  if(!/^\d+$/.test(v)) cluster.value = v.replace(/[^\d]/g,'');
+  saveState();
+});
+cluster.addEventListener("blur", ()=>{
+  if(cbCluster.checked && adminEnabled){
+    validateCluster();
+  }
+  saveState();
+});
 
 function buildUrl(){
   const params = [];
@@ -197,62 +333,26 @@ function buildUrl(){
   return DEVICE_COMMAND + "?" + params.join("&");
 }
 
-adminBtn.onclick=function(){
-  const choice=prompt("관리자: 1=켜기, 0=끄기");
-  if(choice===null) return;
+sendBtn.addEventListener("click", ()=>{
+  saveState();
 
-  const v = String(choice).trim();
-  if(v==="0"){
-    adminEnabled=false;
-    updateAdmin();
-    setBadge("ok","관리자 모드 OFF");
+  if(!cbSsid.checked && !cbPw.checked && !cbCluster.checked){
+    setBadge("err","Wi-Fi 정보를 입력해주세요");
     return;
   }
-  if(v==="1"){
-    const p=prompt("관리자 비밀번호");
-    if(p===ADMIN_PASSWORD){
-      adminEnabled=true;
-      updateAdmin();
-      setBadge("ok","관리자 모드 ON");
-    }else{
-      setBadge("err","비밀번호 오류");
-    }
-    return;
-  }
-  alert("1 또는 0만 입력하세요.");
-};
 
-cbCluster.addEventListener("change", ()=>{
-  applyClusterEnable();
-  saveState();
-});
-
-cluster.addEventListener("input", ()=>{
-  const v = cluster.value;
-  if(v === "") { saveState(); return; }
-  if(!/^\d+$/.test(v)) cluster.value = v.replace(/[^\d]/g,'');
-  saveState();
-});
-cluster.addEventListener("blur", ()=>{
-  if(cbCluster.checked && adminEnabled){
-    validateCluster();
-  }
-  saveState();
-});
-
-sendBtn.onclick=function(){
-  saveState();
   const url = buildUrl();
   if(!url){
     if(badge.textContent==="대기중") setBadge("err","전송하지 않음");
     return;
   }
+
   setBadge("wait","전송중...");
   window.open(url,"_blank");
   setTimeout(()=>setBadge("ok","전송 요청 완료"),300);
-};
+});
 
-[cbSsid, cbPw, ssid, pw].forEach(el=>{
+[cbSsid, cbPw, cbCluster, ssid, pw].forEach(el=>{
   ["input","change","blur","keyup"].forEach(e=>el.addEventListener(e,saveState));
 });
 
